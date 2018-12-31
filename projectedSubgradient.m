@@ -16,11 +16,11 @@ PROJ = pinv(F_us);
 proj = @(z) z - PROJ*(F_us*z - X_us);
 
 %sub gradient of norm(x,1) = sign(x).
-grad = @(z) sign(z);
+grad = @(z) sign(real(z));
 
 % Constraint (Ax - b >= 0)
-const = @(z) z;
-grad_const = @(z) zeros(length(z),1);
+const = @(z) real(z);
+grad_const = @(z) ones(length(z),1);
 
 f = [];
     
@@ -40,8 +40,8 @@ while(it < MAXIT)
    
     %[cmax, ind] = max(const(xk));
     
-    %Finding most violated contraint, should be negative
-    cmax = min(const(xk(real(xk)<0)));
+    %Finding most violated contraint, should be negative if violated
+    cmin = min(const(xk));
     
 
 %     if abs(posm) > abs(negm)
@@ -58,11 +58,11 @@ while(it < MAXIT)
     %Better with the stepsize rule ak=0.1/k
     alpha = 0.5/it;
     
-    if(cmax <= 0)
+    if(cmin >= 0)
         %In this case, the constraint is ok. We use the normal proj subgrad
         %method
         g = grad(xk);
-        g = g + (zeros(128,1) == g)/2; %Putting zeros to 0.5
+        g = g - (zeros(128,1) == g)/2; %Putting zeros to 0.5
         %test(it,:)=(zeros(128,1) == g)/2;
         
          

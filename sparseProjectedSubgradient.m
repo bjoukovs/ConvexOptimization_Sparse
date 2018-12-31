@@ -39,11 +39,11 @@ while(it < MAXIT)
     %x=0, then the subgradient is chosen to be 0.5 to enforce positivity
     
     %The computation of the gradient depends on the inequality constraint
-    [cmax, ind] = max(const(xk));
+    [cmin, ind] = min(const(xk));
     
     alpha = 0.5/it;
     
-    if(cmax <= 0)
+    if(cmin >= 0)
         %In this case, the constraint is ok. We use the normal proj subgrad
         %method
         g = grad(xk);
