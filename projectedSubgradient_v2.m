@@ -29,12 +29,13 @@ grad_const = @(z) -[ones(128,1); zeros(128,1)];
 
 f = [];
     
-MAXIT=50000;
+MAXIT=1e6;
 %MAXIT=100;
 it = 0;
 xk = zeros(256,1);
 %incr=1;
 test=0;
+
 
 
 while(it < MAXIT)
@@ -49,21 +50,7 @@ while(it < MAXIT)
     
     %Finding most violated contraint, should be positive if violated
     [cmax, ind] = max(const(xk));
-    
 
-%     if abs(posm) > abs(negm)
-%         cmax=posm;
-%     else
-%         cmax=negm;   
-%     end
-    
-
-    
-    %cmax = max(const(xk));
-    %test2(:,it)=(max(abs(real(const(xk)))));
-
-    %Better with the stepsize rule ak=0.1/k
-    alpha = 0.5/it;
     
     if(cmax <= 0)
         %In this case, the constraint is ok. We use the normal proj subgrad
@@ -71,8 +58,10 @@ while(it < MAXIT)
         g = grad(xk);
         g = g - ([zeros(128,1); 10*ones(128,1)] == g)/2; %Putting zeros to 0.5
         
+        stepsize = 1/it;
+        
         %Update
-        xk = xk - alpha*proj(g);  
+        xk = xk - stepsize*proj(g);  
         
          
     else
@@ -82,9 +71,9 @@ while(it < MAXIT)
         gc = grad_const(xk);
         g(ind) = gc(ind);
         
-        alpha = abs(cmax)*2;
+        stepsize = abs(cmax)*2;
         
-        xk = xk-alpha*g;
+        xk = xk-stepsize*g;
         
     end
     
