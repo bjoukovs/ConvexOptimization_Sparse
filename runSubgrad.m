@@ -60,18 +60,12 @@ while(it < MAXIT)
         
         switch step
             case 1
-                stepsize = 1/it;   
-                    
-                
+                stepsize = 1/it;          
             case 2
-                stepsize = 2/it;   
-                
-                
+                stepsize = 2/(it);                
             case 3
                 stepsize = 4/(it); 
-               
-                  
-                
+                 
         end
         
         %Update
@@ -96,16 +90,11 @@ while(it < MAXIT)
     
     objective(it)=func(xk);
     
-   
-    %
-    
-%     if stepsize==inf
-%         break;
-%     end
     
 end
 
- semilogy((objective(2:end)),'LineWidth',1.5)
+fopt=0;
+ semilogy((objective(2:end)-fopt),'LineWidth',1.5)
  xlabel('Number of Iterations');ylabel('f(x_k)-f^*');
  grid on
  %hold on
