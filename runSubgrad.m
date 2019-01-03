@@ -1,4 +1,4 @@
-function [objective] = runSubgrad(MAXIT,step)
+function [x] = runSubgrad(MAXIT,step)
 
 
 load('cs.mat');
@@ -7,11 +7,16 @@ x_sol = x;
 %Decomposition of the problem in real and imaginary parts
 X_us2 = [real(X_us); imag(X_us); zeros(128,1)];
 F_us2 = [real(F_us) -imag(F_us); imag(F_us) real(F_us); zeros(128,128) eye(128)];
+%X_us2 = [real(X_us); imag(X_us)];
+%F_us2 = [real(F_us) -imag(F_us); imag(F_us) real(F_us)];
 
 %Particular solution
 xp = pinv(F_us2)*X_us2;
 
 F = null(F_us2);
+
+sz = size(F);
+dimz = sz(2);
 
 %--------------------------------------
 % min norm(x,1) 
@@ -44,7 +49,7 @@ f = [];
 %MAXIT=500;
 %MAXIT=100;
 it = 0;
-xk = zeros(72,1);
+xk = zeros(dimz,1);
 %xk = pinv(F_us2)*X_us2;
 %incr=1;
 test=0;
@@ -52,8 +57,6 @@ test=0;
 
 J = [];
 K = [];
-
-F = [];
 
 BEST_XK = xk;
 
@@ -107,8 +110,6 @@ while(it < MAXIT)
     %Update
     xk = xk - stepsize*g; 
     
-    F = [F func(xk)];
-    
     if func(xk) < func(BEST_XK)
         BEST_XK = xk;
     end
@@ -120,7 +121,7 @@ end
 x = get_x_real(BEST_XK);
 
 
-fopt=0;
+fopt=norm([x_sol; zeros(128,1)], 1);
  semilogy((objective(2:end)-fopt),'LineWidth',1.5)
  xlabel('Number of Iterations');ylabel('f(x_k)-f^*');
  grid on
