@@ -40,7 +40,7 @@ grad_const = @(z) -(rmask*F)';
 
 f = [];
     
-MAXIT=500;
+MAXIT=5e4;
 %MAXIT=100;
 it = 0;
 xk = zeros(72,1);
@@ -48,6 +48,9 @@ xk = zeros(72,1);
 %incr=1;
 test=0;
 
+
+alpha = 0.5;
+beta = 0.1;
 
 J = [];
 K = [];
@@ -68,10 +71,39 @@ while(it < MAXIT)
     
     %Finding most violated contraint, should be positive if violated
     [cmax, ind] = max(const(xk));
+
     
-    j = 0;
-    
-    while(j < 1000 && cmax >= 1e-3)
+    if(cmax <= 1e3)
+        %In this case, the constraint is ok. We use the normal proj subgrad
+        %method
+        g = grad(xk);
+        %g = g - ([zeros(128,1); 10*ones(128,1)] == g)/10; %Putting zeros to -0.1 to enforce positivity
+        
+        stepsize = 1/it;
+        
+         t = 1;
+        j=0;
+        
+        while(j<10 && func(xk - alpha*t*g) < func(xk) - alpha*t*g'*g)
+            
+            t = beta*t;
+            j = j+1;
+            
+        end
+
+        
+        
+        stepsize = alpha*t;
+        J = [J stepsize];
+        K = [K 1];
+
+        %Update
+        xk = xk - stepsize*g; 
+
+         
+    else
+        %In this case, the constraint is not ok, xk is not feasible. we set
+        %the step direction as the derivative of the constraint
         gc = grad_const(xk);
         g = gc(:,ind);
         
@@ -80,21 +112,10 @@ while(it < MAXIT)
         
         xk = xk-stepsize*g;
         
-        [cmax, ind] = max(const(xk));
-        j = j+1;
-    end
-    
-
-    %In this case, the constraint is ok. We use the normal proj subgrad
-    %method
-    g = grad(xk);
-    %g = g - ([zeros(128,1); 10*ones(128,1)] == g)/10; %Putting zeros to -0.1 to enforce positivity
-
-    stepsize = 1/it;
         
-
-    %Update
-    xk = xk - stepsize*g; 
+        K = [K -1];
+        
+    end
     
     F = [F func(xk)];
     
