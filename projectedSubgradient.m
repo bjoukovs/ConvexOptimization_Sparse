@@ -56,7 +56,7 @@ while(it < MAXIT)
     %test2(:,it)=(max(abs(real(const(xk)))));
 
     %Better with the stepsize rule ak=0.1/k
-    alpha = 0.5/it;
+    alpha = 1/it;
     
     if(cmin >= 0)
         %In this case, the constraint is ok. We use the normal proj subgrad

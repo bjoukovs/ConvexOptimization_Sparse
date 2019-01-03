@@ -2,7 +2,6 @@ function [pbjective] = runsubgrd(MAXIT,step)
 %clear all, close all;clc
 
 load('cs.mat');
-fopt=3;
 x_sol = x;
 
 %Decomposition of the problem in real and imaginary parts
@@ -30,12 +29,18 @@ const = @(z) -[z(1:128); zeros(128,1)];
 grad_const = @(z) -[ones(128,1); zeros(128,1)];
 
 f = [];
-%MAXIT=1e5;
-%MAXIT=1000;
+
+fopt=func([x_sol; zeros(128,1)]);
+
 it = 0;
-xk = zeros(256,1);
-%incr=1;
-test=0;
+
+%Starting point: Least square solution
+xk = pinv(F_us2)*X_us2;
+%xk = zeros(256,1);
+
+
+alpha = 0.5;
+beta = 0.9;
 
     
 while(it < MAXIT)
@@ -58,18 +63,35 @@ while(it < MAXIT)
         g = grad(xk);
         g = g - ([zeros(128,1); 10*ones(128,1)] == g)/2; %Putting zeros to 0.5
         
-        switch step
-            case 1
-                stepsize = 1/it;          
-            case 2
-                stepsize = 2/(it);                
-            case 3
-                stepsize = 4/(it); 
-                 
+        stepsize = step/it;
+        
+        %stepsize = (func(xk) - func([x_sol; zeros(128,1)]))/(norm(g,2)^2);
+        
+        t = 1;
+        j=0;
+        
+        while(j<50 && func(xk - t*g) < func(xk) - alpha*t*g'*g)
+            
+            t = beta*t;
+            j = j+1;
+            
         end
         
+        stepsize = t
+        
+%         tp = -1:0.01:1;
+%         for j=1:length(tp)
+%            y(j) = func(xk - tp(j)*g);
+%            z(j) = func(xk) - alpha*tp(j)*g'*g;
+%         end
+%         
+%         figure(3)
+%         plot(tp,z);
+%         hold on
+%         plot(tp,y);
+        
         %Update
-        xk = xk - stepsize*proj(g);  
+        xk = xk - stepsize*(eye(256) - PROJ*F_us2)*g;  
         
       
         
@@ -93,20 +115,19 @@ while(it < MAXIT)
     
 end
 
-fopt=0;
+figure(1)
+
  semilogy((objective(2:end)-fopt),'LineWidth',1.5)
  xlabel('Number of Iterations');ylabel('f(x_k)-f^*');
  grid on
- %hold on
+ hold on
 
 
 
+figure(2)
 
-
-% subplot(2,1,1)
-% plot(xk(1:128))
-% subplot(2,1,2)
-% plot(x_sol)
+plot(xk(1:128))
+hold on;
 
 
 end
