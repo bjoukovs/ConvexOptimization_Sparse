@@ -1,7 +1,10 @@
-function [objective] = runSubgradReduced(MAXIT,step)
+function [numit,x] = runSubgradReduced(MAXIT,step)
 load('cs.mat');
 x_sol = x;
-
+Fopt=3;
+tol=1e-6;
+idx=0;
+iter=[];
 %Decomposition of the problem in real and imaginary parts
 X_us2 = [real(X_us); imag(X_us); zeros(128,1)];
 F_us2 = [real(F_us) -imag(F_us); imag(F_us) real(F_us); zeros(128,128) eye(128)];
@@ -102,15 +105,32 @@ while(it < MAXIT)
         BEST_XK = xk;
     end
     
-    objective(it)=func(BEST_XK);
+    objective(it)=func(BEST_XK)-Fopt;
+    
+    x2 = get_x_real(BEST_XK);
+    x2=x2(1:128);
+    RMSE(it) = sqrt(mean((x2 - x_sol).^2));
+    
+    if RMSE(it) < 1e-3%5.5333e-04
+        idx=idx+1;
+        iter(idx)=it;
+    end
     
 end
-
+    
+numit=iter(1);
 x = get_x_real(BEST_XK);
 
 fopt=0;
- semilogy((objective(2:end)-fopt),'LineWidth',1.5)
+ semilogy((objective(1:end)-fopt),'LineWidth',1.5)
  xlabel('Number of Iterations');ylabel('f(x_k)-f^*');
  grid on
+ 
+% figure(2)
+% subplot(2,1,1)
+% plot(x(1:128));
+% subplot(2,1,2);
+% plot(x_sol);
+
 
 
