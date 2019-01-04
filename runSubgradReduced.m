@@ -39,7 +39,7 @@ grad_const = @(z) -(rmask*F)';
 
 f = [];
     
-MAXIT=500;
+%MAXIT=500;
 %MAXIT=100;
 it = 0;
 xk = zeros(72,1);
