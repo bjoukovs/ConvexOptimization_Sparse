@@ -13,7 +13,7 @@ load('cs.mat');
 
 
 
-k = logspace(-0.2,1,5);
+k = logspace(-0.2,2,);
 legends = {}
 
 for i=length(k):-1:1
@@ -28,7 +28,7 @@ for i=length(k):-1:1
            xs1 >= zeros(128,1)
     cvx_end
     
-    plot(xs1);
+    stem(xs1);
     hold on;
     
     legends{i} = strcat('nu = ',num2str(nu))
@@ -37,34 +37,15 @@ end
 
 legend(legends);
 
-
+% gamma = 1e-3;
 % 
-% k = logspace(-1,-0.5,5);
-% legends = {}
-% % gamma = 1e-3;
-% % 
-% 
-% for i=1:length(k)
+% cvx_begin
+%     variable xs2(128)
+%     minimize( norm(F_us*xs2 - X_us, 2) + gamma*norm(xs2, 1))
 %     
-%     gamma = k(i);
-%     
-%     cvx_begin
-%         variable xs2(128)
-%         minimize( norm(F_us*xs2 - X_us, 2) + gamma*norm(xs2, 1))
-%         
-%         subject to
-%             xs2 >= zeros(128,1)
-%     cvx_end
-%     
-%     plot(xs2);
-%     hold on;
-%     
-%     legends{i} = strcat('gamma = ',num2str(gamma))
-%     
-%     
-% end
-% 
-% legend(legends);
+%     subject to
+%         xs2 >= zeros(128,1)
+% cvx_end
 
 
 % cvx_begin
