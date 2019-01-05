@@ -4,8 +4,8 @@ load('cs.mat');
 %Reduced subgradient plots
 %*************************
 maxit=1000;
-%stepsizes = [0.1 0.2 0.5 1];
-stepsizes = (0.1:0.1:1);
+stepsizes = [0.1 0.2 0.5 1];
+%stepsizes = (0.1:0.1:1);
 
 legends = {};
 

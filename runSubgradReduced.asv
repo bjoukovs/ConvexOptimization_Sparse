@@ -42,12 +42,14 @@ function [numit,x] = runSubgradReduced(MAXIT,step)
     %Objective function
     func = @(z) norm(get_x_real(z)+ 1i*get_x_im(z), 1);
 
-    %sub gradient of objective
+    %sub gradient of cos
     grad = @(z) F'*sign(F*z + xp);
 
     % Constraint (Ax - b <= 0)
     const = @(z) -get_x_real(z);
     grad_const = @(z) -(rmask*F)';
+
+    f = [];
     
     xk = zeros(dimz,1);
 
@@ -56,12 +58,18 @@ function [numit,x] = runSubgradReduced(MAXIT,step)
     while(it < MAXIT)
         it = it+1;
 
+        %Finding a subgradient of norm 1. if the gradient is 0, meaning that
+        %x=0, then the subgradient is chosen to be 0.5 to enforce positivity
+
+        %The computation of the gradient depends on the inequality constraint
+
+        %[cmax, ind] = max(const(xk));
+
         %Finding most violated contraint, should be positive if violated
         [cmax, ind] = max(const(xk));
-      
+
         j = 0;
-        
-        %Making the point feasible
+
         while(j < 1000 && cmax >= 1e-3)
             gc = grad_const(xk);
             g = gc(:,ind);
@@ -74,13 +82,16 @@ function [numit,x] = runSubgradReduced(MAXIT,step)
             j = j+1;
         end
 
-        %Now that the point is feasible, do the subgradient step 
+        %In this case, the constraint is ok. We use the normal subgrad for the
+        %update  
         g = grad(xk);
 
         stepsize = step/it;
 
         %Update
         xk = xk - stepsize*g; 
+
+        F = [F func(xk)];
 
         %Check for best point
         if func(xk) < func(BEST_XK)
@@ -89,23 +100,22 @@ function [numit,x] = runSubgradReduced(MAXIT,step)
 
         objective(it)=func(BEST_XK)-Fopt;
 
-        %Calculate RMSE based # of iterations given tol
         x2 = get_x_real(BEST_XK);
         x2=x2(1:128);
+
+        %Calculate RMSE based # of iterations given tol
         RMSE(it) = sqrt(mean((x2 - x_sol).^2));
 
-        if RMSE(it) < 1e-3
+        if RMSE(it) < 1e-3%5.5333e-04
             idx=idx+1;
             iter(idx)=it;
         end
 
     end
-    
-    %output best iteration for 1e-3 error and best solution found
+
     numit=iter(1);
     x = get_x_real(BEST_XK);
-    
-    %Plotting convergence graph
+
     fopt=0;
     semilogy((objective(1:end)-fopt),'LineWidth',1.5)
     xlabel('Number of Iterations');ylabel('f(x_k)-f^*');
