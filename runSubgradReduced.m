@@ -1,10 +1,14 @@
 function [numit,x] = runSubgradReduced(MAXIT,step)
 load('cs.mat');
+
+%declarations
 x_sol = x;
 Fopt=3;
-tol=1e-6;
 idx=0;
 iter=[];
+it = 0;
+xk = zeros(72,1);
+
 %Decomposition of the problem in real and imaginary parts
 X_us2 = [real(X_us); imag(X_us); zeros(128,1)];
 F_us2 = [real(F_us) -imag(F_us); imag(F_us) real(F_us); zeros(128,128) eye(128)];
@@ -12,6 +16,7 @@ F_us2 = [real(F_us) -imag(F_us); imag(F_us) real(F_us); zeros(128,128) eye(128)]
 %Particular solution
 xp = pinv(F_us2)*X_us2;
 
+%F condition satisfied
 F = null(F_us2);
 
 %--------------------------------------
@@ -23,37 +28,21 @@ F = null(F_us2);
 %--------------------------------------
 rmask = [eye(128) zeros(128,128); zeros(128,128) zeros(128,128)];
 imask = [zeros(128,128) zeros(128,128); zeros(128,128) eye(128)];
+
+%Get real and imaginary parts
 get_x_real = @(z) rmask*(F*z + xp);
 get_x_im = @(z) imask*(F*z + xp);
 
-
+%Objective function
 func = @(z) norm(get_x_real(z)+ 1i*get_x_im(z), 1);
 
-%PROJ = F_us'*inv(F_us*F_us');
-%PROJ = pinv(F_us2);
-
 %sub gradient of norm(x,1) = sign(x).
-%grad = @(z) [sign(z(1:128)); zeros(128,1)];
 grad = @(z) F'*sign(F*z + xp);
 
 % Constraint (Ax - b <= 0)
 const = @(z) -get_x_real(z);
 grad_const = @(z) -(rmask*F)';
-
-f = [];
     
-%MAXIT=500;
-%MAXIT=100;
-it = 0;
-xk = zeros(72,1);
-%xk = pinv(F_us2)*X_us2;
-%incr=1;
-test=0;
-
-
-J = [];
-K = [];
-
 F = [];
 
 BEST_XK = xk;
@@ -76,8 +65,7 @@ while(it < MAXIT)
     while(j < 1000 && cmax >= 1e-3)
         gc = grad_const(xk);
         g = gc(:,ind);
-        
-        %stepsize = abs(cmax)*2;
+       
         stepsize = abs(cmax)/norm(g)^2;
         
         xk = xk-stepsize*g;
@@ -86,13 +74,9 @@ while(it < MAXIT)
         j = j+1;
     end
     
-
-    %In this case, the constraint is ok. We use the normal proj subgrad
-    %method
+    %In this case, the constraint is ok. We use the normal subgrad for the
+    %update  
     g = grad(xk);
-    %g = g - ([zeros(128,1); 10*ones(128,1)] == g)/10; %Putting zeros to -0.1 to enforce positivity
-
-    %stepsize = 1/it;
     
     stepsize = step/it;
 
@@ -101,6 +85,7 @@ while(it < MAXIT)
     
     F = [F func(xk)];
     
+    %Check for best point
     if func(xk) < func(BEST_XK)
         BEST_XK = xk;
     end
@@ -109,6 +94,8 @@ while(it < MAXIT)
     
     x2 = get_x_real(BEST_XK);
     x2=x2(1:128);
+    
+    %Calculate RMSE based # of iterations given tol
     RMSE(it) = sqrt(mean((x2 - x_sol).^2));
     
     if RMSE(it) < 1e-3%5.5333e-04
@@ -122,15 +109,11 @@ numit=iter(1);
 x = get_x_real(BEST_XK);
 
 fopt=0;
- semilogy((objective(1:end)-fopt),'LineWidth',1.5)
- xlabel('Number of Iterations');ylabel('f(x_k)-f^*');
- grid on
+semilogy((objective(1:end)-fopt),'LineWidth',1.5)
+xlabel('Number of Iterations');ylabel('f(x_k)-f^*');
+grid on
  
-% figure(2)
-% subplot(2,1,1)
-% plot(x(1:128));
-% subplot(2,1,2);
-% plot(x_sol);
+
 
 
 
